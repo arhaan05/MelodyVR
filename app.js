@@ -129,24 +129,36 @@
   // ---------------------------------------------------------------- drawing
   const lerp = (a, b, t) => a + (b - a) * t;
   const rgb = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+  const mixc = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 
-  let t = 0;
+  // Day/night cycle palette targets
+  const NIGHT_TOP = [4, 6, 16], NIGHT_BOTTOM = [10, 14, 32], NIGHT_RIDGE = [4, 6, 14];
+
+  let t = 0, dayPhase = 0;
   function draw(dt) {
     const cfg = SCENES[state.scene];
     t += dt * (0.4 + state.driftSpeed * 1.2);
 
+    // Slow day/night arc: 0 = the scene's original light, 1 = deep night.
+    // A full cycle takes ~4 minutes; the drift-speed slider speeds it up.
+    dayPhase = (dayPhase + dt / 240 * (0.6 + state.driftSpeed * 2)) % 1;
+    const darkness = 0.5 - 0.5 * Math.cos(dayPhase * Math.PI * 2);
+    const skyTopNow = mixc(cfg.skyTop, NIGHT_TOP, darkness * 0.85);
+    const skyBottomNow = mixc(cfg.skyBottom, NIGHT_BOTTOM, darkness * 0.85);
+
     // sky
     const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, rgb(cfg.skyTop));
-    sky.addColorStop(1, rgb(cfg.skyBottom));
+    sky.addColorStop(0, rgb(skyTopNow));
+    sky.addColorStop(1, rgb(skyBottomNow));
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
 
-    // stars
+    // stars — brighten as night falls
+    const starBoost = 0.45 + 0.55 * darkness;
     const starCount = Math.floor(stars.length * state.starDensity);
     for (let i = 0; i < starCount; i++) {
       const s = stars[i];
-      const a = 0.35 + 0.6 * Math.abs(Math.sin(t * 0.6 * s.sp + s.tw));
+      const a = (0.35 + 0.6 * Math.abs(Math.sin(t * 0.6 * s.sp + s.tw))) * starBoost;
       ctx.fillStyle = `rgba(255,255,255,${a * 0.85})`;
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
@@ -166,7 +178,7 @@
           x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         const hue = 130 + band * 45 + Math.sin(t * 0.2 + band) * 25;
-        ctx.strokeStyle = `hsla(${hue}, 85%, 62%, 0.16)`;
+        ctx.strokeStyle = `hsla(${hue}, 85%, 62%, ${0.08 + 0.14 * darkness})`;
         ctx.lineWidth = 46 + band * 22;
         ctx.lineCap = "round";
         ctx.stroke();
@@ -174,18 +186,22 @@
       ctx.restore();
     }
 
-    // moon / sun with halo
+    // moon / sun with halo — drifts across the sky and sets as night falls
     const m = cfg.moon;
-    const mx = m.x * W, my = m.y * H;
-    const halo = ctx.createRadialGradient(mx, my, m.r * 0.4, mx, my, m.r * 5);
-    halo.addColorStop(0, rgb(m.color, 0.35));
-    halo.addColorStop(1, rgb(m.color, 0));
-    ctx.fillStyle = halo;
-    ctx.fillRect(mx - m.r * 5, my - m.r * 5, m.r * 10, m.r * 10);
-    ctx.fillStyle = rgb(m.color, 0.95);
-    ctx.beginPath();
-    ctx.arc(mx, my, m.r, 0, Math.PI * 2);
-    ctx.fill();
+    const mx = (m.x + Math.sin(dayPhase * Math.PI * 2) * 0.07) * W;
+    const my = m.y * H + darkness * H * 0.55;
+    const bodyAlpha = Math.max(0, 1 - darkness * 1.25);
+    if (bodyAlpha > 0.01) {
+      const halo = ctx.createRadialGradient(mx, my, m.r * 0.4, mx, my, m.r * 5);
+      halo.addColorStop(0, rgb(m.color, 0.35 * bodyAlpha));
+      halo.addColorStop(1, rgb(m.color, 0));
+      ctx.fillStyle = halo;
+      ctx.fillRect(mx - m.r * 5, my - m.r * 5, m.r * 10, m.r * 10);
+      ctx.fillStyle = rgb(m.color, 0.95 * bodyAlpha);
+      ctx.beginPath();
+      ctx.arc(mx, my, m.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // clouds / mist
     for (const c of clouds) {
@@ -211,12 +227,13 @@
       for (const [x, y] of pts) ctx.lineTo(x, y);
       ctx.lineTo(W + 20, H);
       ctx.closePath();
-      ctx.fillStyle = rgb(cfg.ridges[i]);
+      const ridgeNow = mixc(cfg.ridges[i], NIGHT_RIDGE, darkness * 0.7);
+      ctx.fillStyle = rgb(ridgeNow);
       ctx.fill();
 
       // trees on the front ridge for the forest scene
       if (cfg.hasTrees && i === ridgePaths.length - 1) {
-        ctx.fillStyle = rgb(cfg.ridges[i]);
+        ctx.fillStyle = rgb(ridgeNow);
         for (let k = 0; k < pts.length; k += 6) {
           const [x, y] = pts[k];
           const h = 18 + noise1d(k, 3.7) * 30;
@@ -234,17 +251,18 @@
     if (cfg.hasWater) {
       const wy = H * 0.78;
       const wat = ctx.createLinearGradient(0, wy, 0, H);
-      wat.addColorStop(0, rgb(cfg.skyBottom, 0.85));
-      wat.addColorStop(1, rgb(cfg.skyTop, 0.9));
+      wat.addColorStop(0, rgb(skyBottomNow, 0.85));
+      wat.addColorStop(1, rgb(skyTopNow, 0.9));
       ctx.fillStyle = wat;
       ctx.fillRect(0, wy, W, H - wy);
-      // shimmer path under the sun
+      // shimmer path under the sun — fades away once it sets
+      const shimmer = 0.15 + 0.85 * bodyAlpha;
       ctx.save();
       ctx.globalCompositeOperation = "screen";
       for (let i = 0; i < 26; i++) {
         const ly = wy + (i / 26) * (H - wy);
         const lw = m.r * (1 + i * 0.35) * (0.7 + 0.3 * Math.sin(t * 2 + i));
-        ctx.fillStyle = rgb(m.color, 0.05 + 0.05 * Math.sin(t * 3 + i * 1.7));
+        ctx.fillStyle = rgb(m.color, (0.05 + 0.05 * Math.sin(t * 3 + i * 1.7)) * shimmer);
         ctx.fillRect(mx - lw / 2, ly, lw, 2.2);
       }
       ctx.restore();
@@ -260,7 +278,7 @@
       f.y += f.vy + Math.cos(t * 0.8 + f.ph) * 0.12;
       if (f.x < -10) f.x = W + 10; if (f.x > W + 10) f.x = -10;
       if (f.y < H * 0.35) f.y = H * 0.35; if (f.y > H) f.y = H * 0.5;
-      const a = 0.25 + 0.75 * Math.abs(Math.sin(t * 1.4 + f.ph));
+      const a = (0.25 + 0.75 * Math.abs(Math.sin(t * 1.4 + f.ph))) * (0.55 + 0.45 * darkness);
       const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 5);
       g.addColorStop(0, rgb(cfg.glow, a * 0.9));
       g.addColorStop(1, rgb(cfg.glow, 0));
@@ -455,7 +473,8 @@
     state.muted = m;
     if (AC) master.gain.setTargetAtTime(m ? 0 : 0.9, AC.currentTime, 0.5);
     const btn = document.getElementById("toggleAudio");
-    btn.innerHTML = m ? "🔇 <span>Sound</span>" : "🔊 <span>Sound</span>";
+    btn.textContent = m ? "Muted" : "Sound";
+    btn.classList.toggle("muted", m);
   }
 
   // ---------------------------------------------------------------- breathing

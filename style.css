@@ -275,7 +275,8 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1.5;
 }
 
+.icon-btn.muted { color: rgba(234, 240, 255, 0.45); }
+
 @media (max-width: 560px) {
-  .icon-btn span { display: none; }
-  .icon-btn { padding: 0.5rem 0.7rem; }
+  .icon-btn { padding: 0.45rem 0.7rem; font-size: 0.78rem; }
 }

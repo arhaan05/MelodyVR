@@ -1,4 +1,4 @@
-# MelodyVR 🌌
+# MelodyVR
 
 An immersive audio-visual relaxation experience that runs entirely in your browser. Tune in, breathe, and unwind in a living, interactive landscape.
 
