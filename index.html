@@ -11,6 +11,7 @@
 <body>
 
 <canvas id="scene"></canvas>
+<canvas id="pano" class="hidden"></canvas>
 
 <!-- Welcome / Tune-in overlay -->
 <div id="welcome" class="welcome">
@@ -38,6 +39,7 @@
 <header id="topBar" class="top-bar hidden">
   <div class="brand">Melody<span>VR</span></div>
   <div class="top-actions">
+    <button id="openDescribe" class="icon-btn" title="Describe a new scenery">Scenery</button>
     <button id="toggleBreath" class="icon-btn" title="Breathing guide">Breathe</button>
     <button id="toggleAudio" class="icon-btn" title="Mute / unmute">Sound</button>
     <button id="toggleSettings" class="icon-btn" title="Customize your surroundings">Customize</button>
@@ -84,6 +86,35 @@
   <p class="settings-hint">Tip: click anywhere on the landscape to release a ripple of light and a soft chime.</p>
 </aside>
 
+<!-- Describe Your Scenery -->
+<div id="describe" class="describe hidden">
+  <div class="describe-inner">
+    <h2>Describe your perfect place</h2>
+    <textarea id="sceneryInput" rows="3" maxlength="500"
+      placeholder="A misty forest at dawn with a quiet lake..."></textarea>
+    <div id="describeError" class="describe-error hidden"></div>
+    <div class="describe-actions">
+      <button id="generateBtn" class="generate-btn">Generate</button>
+      <button id="skipDescribe" class="link-btn">Skip to classic scenes</button>
+    </div>
+    <div id="historyWrap" class="history hidden">
+      <h3>Your past sceneries</h3>
+      <div id="historyList" class="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Generation loading state -->
+<div id="genLoading" class="gen-loading hidden">
+  <div class="gen-orb"></div>
+  <div id="genStatus" class="gen-status">Dreaming up your scenery...</div>
+  <button id="cancelGen" class="link-btn">Cancel</button>
+</div>
+
+<button id="newScenery" class="icon-btn new-scenery hidden">Generate new scenery</button>
+
 <script src="app.js"></script>
+<script src="panorama.js"></script>
+<script src="scenery.js"></script>
 </body>
 </html>

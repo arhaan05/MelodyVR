@@ -526,7 +526,6 @@
     initAudio();
     document.getElementById("welcome").classList.add("hidden");
     document.getElementById("topBar").classList.remove("hidden");
-    setTimeout(() => setBreathing(true), 1800);
   });
 
   document.getElementById("toggleBreath").addEventListener("click", () => setBreathing(!state.breathing));
