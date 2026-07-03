@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MelodyVR — Tune In. Breathe. Relax.</title>
+<meta name="description" content="An immersive audio-visual relaxation experience with guided breathing and a customizable, interactive landscape.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- Welcome / Tune-in overlay -->
+<div id="welcome" class="welcome">
+  <div class="welcome-inner">
+    <h1>Melody<span>VR</span></h1>
+    <p class="tagline">An immersive space to slow down, breathe, and simply be.</p>
+    <button id="tuneIn" class="tune-in-btn">
+      <span class="pulse-ring"></span>
+      Tune In
+    </button>
+    <p class="hint">Headphones recommended · Click the landscape to interact</p>
+  </div>
+</div>
+
+<!-- Breathing guide -->
+<div id="breathGuide" class="breath-guide hidden">
+  <div class="breath-circle-wrap">
+    <div id="breathCircle" class="breath-circle"></div>
+    <div id="breathText" class="breath-text">Breathe In</div>
+  </div>
+  <div id="breathCount" class="breath-count"></div>
+</div>
+
+<!-- Top bar -->
+<header id="topBar" class="top-bar hidden">
+  <div class="brand">Melody<span>VR</span></div>
+  <div class="top-actions">
+    <button id="toggleBreath" class="icon-btn" title="Breathing guide">🫁 <span>Breathe</span></button>
+    <button id="toggleAudio" class="icon-btn" title="Mute / unmute">🔊 <span>Sound</span></button>
+    <button id="toggleSettings" class="icon-btn" title="Customize your surroundings">🎨 <span>Customize</span></button>
+  </div>
+</header>
+
+<!-- Settings panel -->
+<aside id="settings" class="settings hidden">
+  <h2>Your Surroundings</h2>
+
+  <section>
+    <h3>Scene</h3>
+    <div class="chip-row" id="sceneChips">
+      <button class="chip active" data-scene="aurora">🌌 Aurora Night</button>
+      <button class="chip" data-scene="sunset">🌅 Ocean Sunset</button>
+      <button class="chip" data-scene="forest">🌲 Misty Forest</button>
+      <button class="chip" data-scene="dawn">🏔 Mountain Dawn</button>
+    </div>
+  </section>
+
+  <section>
+    <h3>Atmosphere</h3>
+    <label class="slider-row">Stars <input type="range" id="starDensity" min="0" max="100" value="60"></label>
+    <label class="slider-row">Fireflies <input type="range" id="fireflyDensity" min="0" max="100" value="40"></label>
+    <label class="slider-row">Drift speed <input type="range" id="driftSpeed" min="0" max="100" value="30"></label>
+  </section>
+
+  <section>
+    <h3>Soundscape</h3>
+    <label class="slider-row">Melody pad <input type="range" id="volPad" min="0" max="100" value="55"></label>
+    <label class="slider-row">Ocean / wind <input type="range" id="volNoise" min="0" max="100" value="35"></label>
+    <label class="slider-row">Chimes <input type="range" id="volChime" min="0" max="100" value="45"></label>
+  </section>
+
+  <section>
+    <h3>Breathing Technique</h3>
+    <div class="chip-row" id="breathChips">
+      <button class="chip active" data-pattern="box">Box 4·4·4·4</button>
+      <button class="chip" data-pattern="478">4·7·8 Calm</button>
+      <button class="chip" data-pattern="coherent">Coherent 5·5</button>
+    </div>
+  </section>
+
+  <p class="settings-hint">Tip: click anywhere on the landscape to release a ripple of light and a soft chime.</p>
+</aside>
+
+<script src="app.js"></script>
+</body>
+</html>
